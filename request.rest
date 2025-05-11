@@ -1,0 +1,28 @@
+GET http://localhost:5000/Order/1
+
+###
+GET http://localhost:5000/users/3
+
+###
+POST  http://localhost:5000/users
+Content-Type: application/json
+
+{
+    "name": "Yuda",
+    "email": "Yuda17@gamil.com",
+    "gender": "Male"
+}
+
+
+###
+PATCH  http://localhost:5000/users/3
+Content-Type: application/json
+
+{
+    "name": "Agus",
+    "email": "Aush17@gamil.com",
+    "gender": "Male"
+}
+
+###
+DELETE  http://localhost:5000/users/2
