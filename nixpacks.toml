@@ -1,9 +1,9 @@
-providers = ["node"]
-[phases.setup]
-nixPkgs = ["nodejs"]
+[build]
+builder = "NIXPACKS"
 
-[phases.install]
-cmds = ["npm install --omit=dev"]
+[deploy]
+startCommand = "npm start"
+nodejs_version = "18.20.5"
 
-[start]
-cmd = "node index.js"
+[install]
+cmds = ["npm install"]
