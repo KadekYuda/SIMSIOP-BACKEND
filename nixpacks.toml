@@ -1,3 +1,9 @@
 providers = ["node"]
+[phases.setup]
+nixPkgs = ["nodejs", "nodejs.pkg"]
+
+[phases.install]
+cmds = ["npm install --omit=dev"]
+
 [start]
-cmd = "npm start"
+cmd = "node index.js"
