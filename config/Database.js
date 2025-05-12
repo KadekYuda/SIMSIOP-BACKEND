@@ -4,11 +4,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const db = new Sequelize(
-    process.env.DB_NAME || 'simsop_db',
-    process.env.DB_USERNAME || 'root',
-    process.env.DB_PASSWORD || '',
+    process.env.MYSQL_DATABASE || 'simsop_db',
+    process.env.MYSQLUSER || 'root',
+    process.env.MYSQLPASSWORD || '',
     {
-        host: process.env.DB_HOST || 'localhost',
+        host: process.env.MYSQLHOST || 'localhost',
+        port: process.env.MYSQLPORT || 3306,
         dialect: 'mysql',
         logging: false,
         pool: {

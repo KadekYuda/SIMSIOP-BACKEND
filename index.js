@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import db, { initDB } from "./config/Database.js";
+import db, { initDB } from "./config/database.js";
 import { initializeDatabase } from "./models/index.js";
 import UserRoute from "./routes/UserRoute.js";
 import OrderRoute from "./routes/OrderRoutes.js";
@@ -18,7 +18,13 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5000'],
+    origin: [
+        'http://localhost:3000', 
+        'http://localhost:5000',
+        'https://simsop-frontend.vercel.app',
+        'https://simsop-frontend-hfng9ege3-yudzs-projects.vercel.app',
+        'https://siops-production.up.railway.app'
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
