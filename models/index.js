@@ -1,6 +1,6 @@
 'use strict';
 
-import db from "../config/Database.js";
+import db from "../config/database.js";
 
 // Import models
 import Product from "./ProductModel.js";

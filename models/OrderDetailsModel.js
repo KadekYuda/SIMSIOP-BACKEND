@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import db from "../config/Database.js";
+import db from "../config/database.js";
 import Order from "./OrderModel.js";
 import BatchStock from "./BatchstockModel.js";
 import Product from "./ProductModel.js";

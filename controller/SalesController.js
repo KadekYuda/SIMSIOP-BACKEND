@@ -2,7 +2,7 @@ import Sales from "../models/SalesModel.js";
 import SalesDetail from "../models/SalesDetailModel.js";
 import BatchStock from "../models/BatchstockModel.js";
 import Product from "../models/ProductModel.js";
-import db from "../config/Database.js";
+import db from "../config/database.js";
 
 export const createSale = async (req, res) => {
     const t = await db.transaction();
