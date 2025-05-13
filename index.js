@@ -1,7 +1,25 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import db, { initDB } from "./config/database.js";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import * as fs from 'fs';
+
+// Get directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Log directory contents
+console.log('Current directory:', process.cwd());
+console.log('Directory contents:', fs.readdirSync(process.cwd()));
+console.log('Config directory contents:', fs.readdirSync(join(process.cwd(), 'config')));
+
+// Use absolute path for imports
+const dbPath = join(__dirname, 'config', 'database.js');
+console.log('Database path:', dbPath);
+console.log('Database file exists:', fs.existsSync(dbPath));
+
+const { default: database, initDB } = await import(`file://${dbPath}`);
 import { initializeDatabase } from "./models/index.js";
 import UserRoute from "./routes/UserRoute.js";
 import OrderRoute from "./routes/OrderRoutes.js";
@@ -68,9 +86,8 @@ try {
 }
 
 // Start the application
-(async () => {    try {
-        // Test database connection
-        await db.authenticate();
+(async () => {    try {        // Test database connection
+        await database.authenticate();
         console.log('Database connected...');
 
         // Initialize database and relationships
