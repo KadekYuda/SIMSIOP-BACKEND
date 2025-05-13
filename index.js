@@ -41,6 +41,7 @@ app.use(cors({
         'http://localhost:5000',
         'https://simsop-frontend.vercel.app',
         'https://simsop-frontend-hfng9ege3-yudzs-projects.vercel.app',
+        'https://simsop.vercel.app',
         'https://siops-production.up.railway.app'
     ],
     credentials: true,
