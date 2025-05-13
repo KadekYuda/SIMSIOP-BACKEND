@@ -68,16 +68,13 @@ try {
 }
 
 // Start the application
-(async () => {
-    try {
-        // Initialize database first
-        await initDB();
-        
+(async () => {    try {
         // Test database connection
         await db.authenticate();
         console.log('Database connected...');
 
-        // Initialize models and update tables
+        // Initialize database and relationships
+        await initDB();
         await initializeDatabase();
         
         // Initialize admin user
