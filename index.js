@@ -36,20 +36,29 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: [
-        'http://localhost:3000', 
-        'http://localhost:5000',
-        'https://simsop-frontend.vercel.app',
-        'https://simsop-frontend-hfng9ege3-yudzs-projects.vercel.app',
-        'https://simsop.vercel.app',
-        'https://siops-production.up.railway.app'
-    ],
+    origin: function(origin, callback) {
+        const allowedOrigins = [
+            'http://localhost:3000', 
+            'http://localhost:5000',
+            'https://simsop-frontend.vercel.app',
+            'https://simsop-frontend-hfng9ege3-yudzs-projects.vercel.app',
+            'https://simsop.vercel.app',
+            'https://siops-production.up.railway.app'
+        ];
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, origin);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
     exposedHeaders: ['Set-Cookie'],
-    preflightContinue: true,
-    optionsSuccessStatus: 200
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
 
 // Handle OPTIONS preflight requests
@@ -58,18 +67,6 @@ app.options('*', cors());
 // Body parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Add headers before the routes are defined
-app.use(function (req, res, next) {
-    // Allow requests from any origin
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    
-    // Pass to next layer of middleware
-    next();
-});
 
 // Cookie parser middleware
 app.use(cookieParser());
