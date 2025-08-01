@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
+import db from "../config/Database.js";
 import Categories from "./CategoriesModel.js";
 
 const { DataTypes } = Sequelize;
@@ -47,6 +47,8 @@ const Product = db.define('products', {
     },
 }, {
     freezeTableName: true,
+    timestamps: true,
+    paranoid: true,
     
 });
 

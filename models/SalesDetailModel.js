@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
+import db from "../config/Database.js";
 import Sales from "./SalesModel.js";
 import BatchStock from "./BatchstockModel.js";
 import Product from "./ProductModel.js";
@@ -41,7 +41,9 @@ const SalesDetail = db.define('sales_details', {
     },
     created_at: DataTypes.DATE,
     updated_at: DataTypes.DATE,
-}, { freezeTableName: true });
+}, { freezeTableName: true,
+    paranoid: false,
+ });
 
 
 

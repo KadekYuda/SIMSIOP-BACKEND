@@ -4,18 +4,17 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const db = new Sequelize(
-    process.env.MYSQL_DATABASE || 'railway',
-    process.env.MYSQLUSER || 'root',
-    process.env.MYSQLPASSWORD || '',
+    process.env.DB_NAME || 'simsop_db',
+    process.env.DB_USERNAME || 'root',
+    process.env.DB_PASSWORD || '',
     {
-        host: process.env.MYSQLHOST || 'localhost',
-        port: process.env.MYSQLPORT || 3306,
+        host: process.env.DB_HOST || 'localhost',
         dialect: 'mysql',
         logging: false,
         pool: {
             max: 5,
             min: 0,
-            acquire: 30000, 
+            acquire: 30000,
             idle: 10000
         },
         define: {
@@ -31,9 +30,6 @@ const db = new Sequelize(
 // Function to sync all models
 export const syncDatabase = async (force = false) => {
     try {
-        // Initialize database connection and create if not exists
-        await db.query(`CREATE DATABASE IF NOT EXISTS ${process.env.MYSQL_DATABASE || 'railway'};`);
-        
         // First, sync Users and Categories (no foreign key dependencies)
         const Users = (await import('../models/UserModel.js')).default;
         const Categories = (await import('../models/CategoriesModel.js')).default;

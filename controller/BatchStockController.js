@@ -1,5 +1,6 @@
 import BatchStok from "../models/BatchstockModel.js";
 import Products from "../models/ProductModel.js";
+import Categories from "../models/CategoriesModel.js";
 import { Op } from "sequelize";
 
 export const getBatchStok = async (req, res) => {
@@ -18,24 +19,28 @@ export const getBatchStok = async (req, res) => {
                 { code_product: { [Op.like]: `%${search}%` } },
                 { '$Product.name_product$': { [Op.like]: `%${search}%` } }
             ];
-        }
-
-        const totalCount = await BatchStok.count({
+        }        const totalCount = await BatchStok.count({
             where: whereCondition,
             include: [{
                 model: Products,
-                attributes: ['code_product', 'name_product'],
-                required: false
+                attributes: ['code_product', 'name_product', 'code_categories'],
+                required: false,
+                include: [{
+                    model: Categories,
+                    attributes: ['code_categories', 'name_categories']
+                }]
             }],
             distinct: true
-        });
-
-        const rows = await BatchStok.findAll({
+        });const rows = await BatchStok.findAll({
             where: whereCondition,
             include: [{
                 model: Products,
-                attributes: ['code_product', 'name_product'],
-                required: false
+                attributes: ['code_product', 'name_product', 'code_categories'],
+                required: false,
+                include: [{
+                    model: Categories,
+                    attributes: ['code_categories', 'name_categories']
+                }]
             }],
             order: [
                 [{ model: Products }, 'name_product', 'ASC'],
@@ -207,77 +212,62 @@ export const getMinimumStockAlert = async (req, res) => {
     }
 };
 
-// export const createBatchStok = async (req, res) => {
-//     try {
-//         const { code_product, batch_code, stock_quantity, purchase_price, expiry_date } = req.body;
-        
-//         // Validate required fields
-//         if (!code_product || !batch_code || !expiry_date) {
-//             return res.status(400).json({ msg: "Product code, batch code, and expiry date are required" });
-//         }
-        
-//         // Check if product exists
-//         const product = await Products.findOne({
-//             where: { code_product: code_product }
-//         });
-        
-//         if (!product) {
-//             return res.status(404).json({ msg: "Product not found" });
-//         }
-        
-//         // Check if batch code already exists
-//         const existingBatch = await BatchStok.findOne({
-//             where: { batch_code: batch_code }
-//         });
-        
-//         if (existingBatch) {
-//             return res.status(409).json({ msg: "Batch code already exists" });
-//         }
-        
-//         // Create new batch
-//         const newBatch = await BatchStok.create({
-//             code_product: code_product,
-//             batch_code: batch_code,
-//             initial_stock: 0, // Initial stock is 0 as it's a new batch
-//             stock_quantity: stock_quantity || 0,
-//             purchase_price: purchase_price,
-//             exp_date: expiry_date
-//         });
-        
-//         // Get full batch data with product info
-//         const fullBatchData = await BatchStok.findOne({
-//             where: { batch_id: newBatch.batch_id },
-//             include: [{
-//                 model: Products,
-//                 attributes: ['code_product', 'name_product']
-//             }]
-//         });
-        
-//         const formattedResponse = fullBatchData.get({ plain: true });
-//         if (formattedResponse.Product && formattedResponse.Product.code_product) {
-//             formattedResponse.Product.code_product = String(formattedResponse.Product.code_product);
-//         }
-//         if (formattedResponse.code_product) {
-//             formattedResponse.code_product = String(formattedResponse.code_product);
-//         }
-        
-//         res.status(201).json({ 
-//             msg: "Batch created successfully",
-//             result: formattedResponse
-//         });
-//     } catch (error) {
-//         console.error("Error creating batch stock:", error);
-//         res.status(500).json({ msg: error.message });
-//     }
-// };
-
-// Disable create, update, and delete operations
 export const createBatchStok = async (req, res) => {
     res.status(403).json({ msg: "Operation not allowed" })
 };
 
 export const updateBatchStok = async (req, res) => {
-    res.status(403).json({ msg: "Operation not allowed" })
+    try {
+        const { batch_id } = req.params;
+        const { expired_date } = req.body;
+
+        if (!batch_id) {
+            return res.status(400).json({ error: "Batch ID is required" });
+        }
+
+        if (!expired_date) {
+            return res.status(400).json({ error: "Expired date is required" });
+        }
+
+        // Validate date format
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(expired_date)) {
+            return res.status(400).json({ error: "Invalid date format. Use YYYY-MM-DD" });
+        }
+
+        // Find the batch
+        const batch = await BatchStok.findByPk(batch_id);
+        if (!batch) {
+            return res.status(404).json({ error: "Batch not found" });
+        }
+
+        // Update only the expiration date
+        await batch.update({ 
+            exp_date: expired_date,
+            expired_date: expired_date // Update both fields for compatibility
+        });
+
+        // Fetch updated batch with product info
+        const updatedBatch = await BatchStok.findByPk(batch_id, {
+            include: [{
+                model: Products,
+                attributes: ['code_product', 'name_product', 'code_categories'],
+                required: false,
+                include: [{
+                    model: Categories,
+                    attributes: ['code_categories', 'name_categories']
+                }]
+            }]
+        });
+
+        res.status(200).json({
+            msg: "Expiration date updated successfully",
+            result: updatedBatch
+        });
+    } catch (error) {
+        console.error("Error updating batch expiration date:", error);
+        res.status(500).json({ error: error.message });
+    }
 };
 
 export const deleteBatchStok = async (req, res) => {

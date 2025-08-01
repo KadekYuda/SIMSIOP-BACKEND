@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
+import db from "../config/Database.js";
 import Users from "./UserModel.js";
 
 const { DataTypes } = Sequelize;
@@ -25,6 +25,14 @@ const Sales = db.define('sales', {
     },
     created_at: DataTypes.DATE,
     updated_at: DataTypes.DATE,
-}, { freezeTableName: true });  
+}, { freezeTableName: true,
+    paranoid: false,
+ });  
+
+// Add User association
+Sales.belongsTo(Users, {
+    foreignKey: 'user_id',
+    as: 'User'  // This alias must match what we use in queries
+});
 
 export default Sales;

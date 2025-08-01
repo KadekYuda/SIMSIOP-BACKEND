@@ -40,7 +40,7 @@ export const upload = multer({
 export const importProductsFromCSV = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "File tidak ditemukan" });
+      return res.status(400).json({ message: "File not found" });
     }
 
     const errors = [];
@@ -50,7 +50,7 @@ export const importProductsFromCSV = async (req, res) => {
     const BATCH_SIZE = 100; // Increased batch size for better performance
     const startTime = Date.now();
 
-    console.log('Memulai proses impor...');
+    console.log('Starting import process...');
 
     // Siapkan cache untuk kategori
     const categoryCache = new Map();
@@ -64,12 +64,11 @@ export const importProductsFromCSV = async (req, res) => {
         .pipe(parse({
           delimiter: ",",
           columns: (header) => {
-            csvColumns = header.map(h => h.trim());
-            console.log('Kolom CSV terdeteksi:', csvColumns);
+            csvColumns = header.map(h => h.trim());            console.log('CSV columns detected:', csvColumns);
             
             if (!csvColumns.includes('KdBar')) {
-              console.error('Kolom KdBar tidak ditemukan di CSV');
-              reject(new Error('Format CSV tidak valid: Kolom KdBar tidak ditemukan'));
+              console.error('KdBar column not found in CSV');
+              reject(new Error('Invalid CSV format: KdBar column not found'));
               return false;
             }
             return csvColumns;
@@ -85,8 +84,7 @@ export const importProductsFromCSV = async (req, res) => {
           console.error('Error parsing CSV:', error);
           reject(error);
         })
-        .on("end", () => {
-          console.log(`File CSV dibaca: ${allRows.length} baris`);
+        .on("end", () => {          console.log(`CSV file read: ${allRows.length} rows`);
           resolve();
         });
     });
@@ -152,9 +150,8 @@ export const importProductsFromCSV = async (req, res) => {
         // Validasi field wajib
         if (!transformedRow.code_product) {
           errors.push({
-            row: processedCount,
-            code_product: row.KdBar,
-            error: `Baris ${processedCount}: Kode produk wajib diisi`
+            row: processedCount,            code_product: row.KdBar,
+            error: `Row ${processedCount}: Product code is required`
           });
           validationErrors.add(processedCount); // Using validationErrors instead of errorRows
           continue; // Skip this row
@@ -171,17 +168,16 @@ export const importProductsFromCSV = async (req, res) => {
         errors.push({ 
           row: processedCount,
           code_product: row.KdBar,
-          error: `Error transformasi baris ${processedCount}: ${error.message}` 
+          error: `Error transforming row ${processedCount}: ${error.message}` 
         });
         validationErrors.add(processedCount); // Using validationErrors instead of errorRows
       }
     }
     
-    // Actually using the Set we created to provide statistics
-    console.log(`Total baris dengan error validasi: ${validationErrors.size}`);
+    // Actually using the Set we created to provide statistics    console.log(`Total rows with validation errors: ${validationErrors.size}`);
     
-    // Proses semua kategori sekaligus (single DB operation)
-    console.log(`Memproses ${uniqueCategories.size} kategori unik...`);
+    // Process all categories at once (single DB operation)
+    console.log(`Processing ${uniqueCategories.size} unique categories...`);
     try {
       // Cari kategori yang sudah ada
       const existingCategories = await Categories.findAll({
@@ -215,17 +211,16 @@ export const importProductsFromCSV = async (req, res) => {
         }
       }
       
-      if (categoriesToCreate.length > 0) {
-        console.log(`Membuat ${categoriesToCreate.length} kategori baru...`);
+      if (categoriesToCreate.length > 0) {        console.log(`Creating ${categoriesToCreate.length} new categories...`);
         const createdCategories = await Categories.bulkCreate(categoriesToCreate);
         createdCategories.forEach(category => {
           categoryCache.set(category.code_categories, category);
         });
       }
     } catch (error) {
-      console.error('Error saat memproses kategori:', error);
+      console.error('Error while processing categories:', error);
       errors.push({
-        error: `Error saat memproses kategori: ${error.message}`
+        error: `Error while processing categories: ${error.message}`
       });
       // Lanjutkan meski ada error kategori
     }
@@ -246,14 +241,13 @@ export const importProductsFromCSV = async (req, res) => {
       existingProducts.forEach(product => {
         existingProductMap.set(product.code_product, product);
       });
-      
-      console.log(`Ditemukan ${existingProducts.length} produk yang sudah ada`);
+        console.log(`Found ${existingProducts.length} existing products`);
     } catch (error) {
-      console.error('Error saat mencari produk yang sudah ada:', error);
+      console.error('Error while searching for existing products:', error);
       errors.push({
-        error: `Error saat mencari produk yang sudah ada: ${error.message}`
+        error: `Error while searching for existing products: ${error.message}`
       });
-      // Lanjutkan meski ada error
+      // Continue despite error
     }
     
     // Dapatkan hitungan batch untuk semua produk sekaligus
@@ -275,12 +269,11 @@ export const importProductsFromCSV = async (req, res) => {
         const count = batchCountMap.get(batch.code_product) || 0;
         batchCountMap.set(batch.code_product, count + 1);
       });
-      
-      console.log(`Mendapatkan informasi batch untuk ${batchCountMap.size} produk`);
+        console.log(`Getting batch information for ${batchCountMap.size} products`);
     } catch (error) {
-      console.error('Error saat mendapatkan data batch:', error);
+      console.error('Error while getting batch data:', error);
       errors.push({
-        error: `Error saat mendapatkan data batch: ${error.message}`
+        error: `Error while getting batch data: ${error.message}`
       });
       // Lanjutkan meski ada error
     }
@@ -290,15 +283,14 @@ export const importProductsFromCSV = async (req, res) => {
     
     // Track products that were successfully created
     const successfulProducts = new Map(); // Changed to Map to store both product and its creation status
-    
-    // First pass: Create or update all products
-    console.log(`Memproses ${transformedRows.length} produk...`);
+      // First pass: Create or update all products
+    console.log(`Processing ${transformedRows.length} products...`);
     
     // Optimize by doing bulk operations where possible
     const productsToCreate = [];
     
     for (const row of transformedRows) {
-      // Siapkan objek produk dasar
+      // Prepare basic product object
       const productData = {
         ...row,
         code_categories: row.code_categories || null,
@@ -320,8 +312,7 @@ export const importProductsFromCSV = async (req, res) => {
     
     // Create all new products in one bulk operation if possible
     if (productsToCreate.length > 0) {
-      try {
-        console.log(`Mencoba membuat ${productsToCreate.length} produk baru dalam bulk operation`);
+      try {        console.log(`Attempting to create ${productsToCreate.length} new products in bulk operation`);
         const createdProducts = await Product.bulkCreate(productsToCreate);
         
         // Mark successfully created products
@@ -333,7 +324,7 @@ export const importProductsFromCSV = async (req, res) => {
           });
         });
         
-        console.log(`Berhasil membuat ${createdProducts.length} produk baru`);
+        console.log(`Successfully created ${createdProducts.length} new products`);
       } catch (bulkError) {
         console.error(`Bulk create failed, falling back to individual creates:`, bulkError);
         
@@ -356,15 +347,19 @@ export const importProductsFromCSV = async (req, res) => {
         }
       }
     }
-    
+     // Calculate duplicate count and handle existing products
+    const duplicateCount = transformedRows.filter(row => 
+      existingProductMap.has(row.code_product)
+    ).length;
+    console.log(`Found ${duplicateCount} duplicate products`);
+
     // Update existing products in batches
     const productsToUpdate = transformedRows.filter(row => 
       existingProductMap.has(row.code_product) && 
       !successfulProducts.has(row.code_product)
     );
-    
-    if (productsToUpdate.length > 0) {
-      console.log(`Memperbarui ${productsToUpdate.length} produk yang sudah ada`);
+      if (productsToUpdate.length > 0) {
+      console.log(`Updating ${productsToUpdate.length} existing products`);
       
       for (let i = 0; i < productsToUpdate.length; i += BATCH_SIZE) {
         const batch = productsToUpdate.slice(i, i + BATCH_SIZE);
@@ -537,23 +532,22 @@ export const importProductsFromCSV = async (req, res) => {
     // Final counts
     successCount = successfulProducts.size;
     
-    console.log(`Proses impor selesai dalam ${elapsed.toFixed(2)} detik`);
-    console.log(`Total data diproses: ${processedCount}, Sukses: ${successCount}, Error: ${errors.length}`);
+    console.log(`Import process completed in ${elapsed.toFixed(2)} seconds`);
+    console.log(`Total data processed: ${processedCount}, Successful: ${successCount}, Error: ${errors.length}`);
     
     // Add validation errors count to the response
     res.json({
-      message: `Import selesai: ${successCount} berhasil dari total ${processedCount} data dengan ${errors.length} error`,
+      message: `Import completed: ${successCount} successful out of ${processedCount} total data with ${errors.length} errors`,
       total_data: processedCount,
       success_count: successCount,
       error_count: errors.length,
       validation_errors: validationErrors.size,
-      batch_stock_count: batchStocksToCreate.length,
-      elapsed_time: `${elapsed.toFixed(2)} detik`,
+      batch_stock_count: batchStocksToCreate.length,      elapsed_time: `${elapsed.toFixed(2)} seconds`,
       errors: errors.length > 0 ? errors.slice(0, 20) : null,
     });
 
   } catch (error) {
-    console.error('Error utama:', error);
+    console.error('Main error:', error);
     res.status(500).json({ 
       message: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
@@ -632,15 +626,14 @@ export const getProducts = async (req, res) => {
       if (!stockMap[codeProduct]) {
         stockMap[codeProduct] = 0;
         initialStockMap[codeProduct] = 0;
-      }
-      // Tambahkan stock_quantity ke total stock
+      }      // Add stock_quantity to total stock
       stockMap[codeProduct] += parseInt(batch.stock_quantity || 0);
     });
 
     // Add total stock to products
     const productsWithStock = products.map(product => {
       const plainProduct = product.get({ plain: true });
-      // Gunakan total dari stock_quantity saja
+      // Use total from stock_quantity only
       const totalStock = stockMap[plainProduct.code_product] || 0;
       const minStock = plainProduct.min_stock || 0;
 

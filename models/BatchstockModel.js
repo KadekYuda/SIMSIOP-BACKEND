@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
+import db from "../config/Database.js";
 
 const { DataTypes } = Sequelize;
 
@@ -55,6 +55,8 @@ const BatchStock = db.define('batch_stock', {
      
 }, {
     freezeTableName: true,
+    paranoid: false,
+    timestamps: true,
 });
 
 export default BatchStock;

@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import db from "../config/database.js";
+import db from "../config/Database.js";
 import Users from "./UserModel.js";
 
 const { DataTypes } = Sequelize;
@@ -35,7 +35,8 @@ const Order = db.define('orders', {
     created_at: DataTypes.DATE,
     updated_at: DataTypes.DATE,
 }, { 
-    freezeTableName: true 
+    freezeTableName: true,
+    paranoid: false,
 });
 
 
